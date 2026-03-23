@@ -3,49 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>הרובוט של פרימי</title>
+    <title>שליטה ברובורוק</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f9; }
-        button { padding: 15px 25px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; transition: 0.3s; }
-        .btn-main { background: #007bff; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        #login-area { margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 20px; }
-        input { padding: 10px; font-size: 16px; width: 100px; text-align: center; border: 1px solid #ccc; border-radius: 5px; }
+        body { font-family: sans-serif; text-align: center; background: #f4f4f9; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        button { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-blue { background: #007bff; color: white; }
+        .btn-green { background: #28a745; color: white; }
+        .btn-red { background: #dc3545; color: white; }
+        .btn-orange { background: #fd7e14; color: white; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        #status { margin-top: 20px; color: #555; font-weight: bold; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <h1>שליטה ב-Roborock</h1>
+    <div class="card">
+        <h2>שליטה ברובוט 🧹</h2>
+        
+        <div id="login-section">
+            <button class="btn-blue" onclick="requestCode()">שלח קוד אימות למייל</button>
+            <input type="text" id="verification-code" placeholder="הכנס את הקוד מהמייל">
+            <button class="btn-green" onclick="login()">התחבר</button>
+        </div>
 
-    <div id="login-area">
-        <h3>שלב 1: התחברות</h3>
-        <button class="btn-main" onclick="requestCode()">שלח קוד אימות למייל</button>
-        <br><br>
-        <input type="text" id="authCode" placeholder="קוד">
-        <button class="btn-success" onclick="login()">התחבר</button>
-    </div>
+        <div id="controls-section" class="hidden">
+            <button class="btn-green" onclick="runAction('start')">הפעל ניקוי ▶️</button>
+            <button class="btn-red" onclick="runAction('stop')">עצור ⏸️</button>
+            <button class="btn-orange" onclick="runAction('home')">חזור לעמדת טעינה 🏠</button>
+        </div>
 
-    <div id="controls">
-        <h3>שלב 2: פקודות</h3>
-        <button class="btn-success" onclick="run('start')">הפעל ניקוי</button>
-        <button class="btn-danger" onclick="run('stop')">עצור</button>
-        <button class="btn-main" onclick="run('home')">חזור לטעינה</button>
+        <div id="status">ממתין לפעולה...</div>
     </div>
 
     <script>
-        function requestCode() {
-            alert("מבקש קוד מהשרת... המתיני רגע");
-            fetch('/request_code').then(r => alert("הקוד נשלח למייל שלך!"));
+        const log = (msg) => document.getElementById('status').innerText = msg;
+
+        async function requestCode() {
+            log("שולח בקשה לקוד...");
+            const res = await fetch('/request_code');
+            const data = await res.json();
+            log(data.status === "code_sent" ? "הקוד נשלח! בדקי את המייל" : "שגיאה בשליחת הקוד");
         }
-        function login() {
-            let code = document.getElementById('authCode').value;
-            fetch('/login/' + code).then(r => r.json()).then(data => {
-                if(data.status === "success") alert("התחברת בהצלחה לרובוט!");
-                else alert("ההתחברות נכשלה, בדקי את הקוד.");
-            });
+
+        async function login() {
+            const code = document.getElementById('verification-code').value;
+            if(!code) return alert("נא להזין קוד");
+            log("מתחבר...");
+            const res = await fetch(`/login/${code}`);
+            const data = await res.json();
+            if(data.status === "success") {
+                log("מחובר בהצלחה!");
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('controls-section').classList.remove('hidden');
+            } else {
+                log("התחברות נכשלה. וודאי שהקוד נכון");
+            }
         }
-        function run(cmd) {
-            fetch('/action/' + cmd).then(r => alert("הפקודה נשלחה!"));
+
+        async function runAction(cmd) {
+            log(`שולח פקודה: ${cmd}...`);
+            const res = await fetch(`/action/${cmd}`);
+            const data = await res.json();
+            log(`סטטוס: ${data.status}`);
         }
     </script>
 </body>
