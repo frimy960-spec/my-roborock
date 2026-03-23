@@ -2,16 +2,13 @@ import os
 import asyncio
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
-# זו הדרך הנכונה בגרסה 5.0.0
-from roborock import RoborockApiClient
+from roborock import RoborockClient
 
 app = Flask(__name__)
 CORS(app)
 
-# משתנים גלובליים
 client = None
 EMAIL = "gs6817771@gmail.com"
-user_data = None
 
 @app.route('/')
 def home():
@@ -21,7 +18,7 @@ def home():
 def request_code():
     async def _req():
         global client
-        client = RoborockApiClient(EMAIL)
+        client = RoborockClient(EMAIL)
         await client.request_code()
         return True
     
@@ -33,11 +30,10 @@ def request_code():
 @app.route('/login/<code>')
 def login(code):
     async def _login():
-        global client, user_data
-        if not client:
-            client = RoborockApiClient(EMAIL)
-        user_data = await client.code_login(code)
-        return user_data is not None
+        global client
+        if not client: client = RoborockClient(EMAIL)
+        await client.code_login(code)
+        return True
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -47,19 +43,15 @@ def login(code):
 @app.route('/action/<cmd>')
 def run_command(cmd):
     async def _do():
-        global client, user_data
-        if not client or not user_data:
-            return False
+        global client
+        if not client: return False
+        devices = await client.get_devices()
+        if not devices: return False
+        device = devices[0]
         
-        home_data = await client.get_home_data(user_data)
-        if not home_data.devices:
-            return False
-        
-        device_id = home_data.devices[0].duid
-        
-        if cmd == "start": await client.send_command(device_id, "app_start", [])
-        elif cmd == "stop": await client.send_command(device_id, "app_stop", [])
-        elif cmd == "home": await client.send_command(device_id, "app_charge", [])
+        if cmd == "start": await client.start_clean(device)
+        elif cmd == "stop": await client.stop_clean(device)
+        elif cmd == "home": await client.return_to_dock(device)
         return True
 
     loop = asyncio.new_event_loop()
