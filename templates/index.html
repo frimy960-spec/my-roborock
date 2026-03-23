@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <title>השואב שלי</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: system-ui, sans-serif; text-align: center; padding: 20px; background: #f0f2f5; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        button { 
+            width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold; cursor: pointer;
+            border: none; border-radius: 12px; color: white; transition: transform 0.1s;
+        }
+        .start { background: #2ecc71; }
+        .stop { background: #e74c3c; }
+        .home { background: #3498db; }
+        button:active { transform: scale(0.95); opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>הרובוט של פרימי</h1>
+        <button class="start" onclick="send('start')">▶️ הפעל ניקוי</button>
+        <button class="stop" onclick="send('stop')">⏹️ עצור</button>
+        <button class="home" onclick="send('home')">🏠 חזור לטעינה</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        function send(cmd) {
+            const status = document.getElementById('status');
+            status.innerText = "שולח פקודה...";
+            fetch('/action/' + cmd)
+                .then(r => r.json())
+                .then(data => { status.innerText = "בוצע בהצלחה!"; })
+                .catch(e => { status.innerText = "שגיאה בחיבור"; });
+        }
+    </script>
+</body>
+</html>
