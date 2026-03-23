@@ -1,17 +1,16 @@
 import os
+import asyncio
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
-from roborock import RoborockClient
-from roborock.containers import HomeDataDevice
-import asyncio
+from roborock.api import RoborockApiClient
 
 app = Flask(__name__)
 CORS(app)
 
-# משתנה גלובלי לשמירת הלקוח והמכשיר
+# משתנים גלובליים
 client = None
-device = None
 EMAIL = "gs6817771@gmail.com"
+user_data = None
 
 @app.route('/')
 def home():
@@ -21,7 +20,7 @@ def home():
 def request_code():
     async def _req():
         global client
-        client = RoborockClient(EMAIL)
+        client = RoborockApiClient(EMAIL)
         await client.request_code()
         return True
     
@@ -33,13 +32,11 @@ def request_code():
 @app.route('/login/<code>')
 def login(code):
     async def _login():
-        global client, device
-        await client.code_login(code)
-        devices = await client.get_devices()
-        if devices:
-            device = devices[0]
-            return True
-        return False
+        global client, user_data
+        if not client:
+            client = RoborockApiClient(EMAIL)
+        user_data = await client.code_login(code)
+        return user_data is not None
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -49,11 +46,21 @@ def login(code):
 @app.route('/action/<cmd>')
 def run_command(cmd):
     async def _do():
-        global client, device
-        if not client or not device: return False
-        if cmd == "start": await client.start_clean(device)
-        elif cmd == "stop": await client.stop_clean(device)
-        elif cmd == "home": await client.return_to_dock(device)
+        global client, user_data
+        if not client or not user_data:
+            return False
+        
+        # קבלת רשימת המכשירים
+        home_data = await client.get_home_data(user_data)
+        if not home_data.devices:
+            return False
+        
+        device_id = home_data.devices[0].duid
+        
+        # שליחת פקודה לפי הסוג
+        if cmd == "start": await client.send_command(device_id, "app_start", [])
+        elif cmd == "stop": await client.send_command(device_id, "app_stop", [])
+        elif cmd == "home": await client.send_command(device_id, "app_charge", [])
         return True
 
     loop = asyncio.new_event_loop()
