@@ -1,38 +1,51 @@
 <!DOCTYPE html>
-<html dir="rtl">
+<html lang="he" dir="rtl">
 <head>
-    <title>השואב שלי</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הרובוט של פרימי</title>
     <style>
-        body { font-family: system-ui, sans-serif; text-align: center; padding: 20px; background: #f0f2f5; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        button { 
-            width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold; cursor: pointer;
-            border: none; border-radius: 12px; color: white; transition: transform 0.1s;
-        }
-        .start { background: #2ecc71; }
-        .stop { background: #e74c3c; }
-        .home { background: #3498db; }
-        button:active { transform: scale(0.95); opacity: 0.8; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f9; }
+        button { padding: 15px 25px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; transition: 0.3s; }
+        .btn-main { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        #login-area { margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 20px; }
+        input { padding: 10px; font-size: 16px; width: 100px; text-align: center; border: 1px solid #ccc; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>הרובוט של פרימי</h1>
-        <button class="start" onclick="send('start')">▶️ הפעל ניקוי</button>
-        <button class="stop" onclick="send('stop')">⏹️ עצור</button>
-        <button class="home" onclick="send('home')">🏠 חזור לטעינה</button>
-        <p id="status"></p>
+    <h1>שליטה ב-Roborock</h1>
+
+    <div id="login-area">
+        <h3>שלב 1: התחברות</h3>
+        <button class="btn-main" onclick="requestCode()">שלח קוד אימות למייל</button>
+        <br><br>
+        <input type="text" id="authCode" placeholder="קוד">
+        <button class="btn-success" onclick="login()">התחבר</button>
+    </div>
+
+    <div id="controls">
+        <h3>שלב 2: פקודות</h3>
+        <button class="btn-success" onclick="run('start')">הפעל ניקוי</button>
+        <button class="btn-danger" onclick="run('stop')">עצור</button>
+        <button class="btn-main" onclick="run('home')">חזור לטעינה</button>
     </div>
 
     <script>
-        function send(cmd) {
-            const status = document.getElementById('status');
-            status.innerText = "שולח פקודה...";
-            fetch('/action/' + cmd)
-                .then(r => r.json())
-                .then(data => { status.innerText = "בוצע בהצלחה!"; })
-                .catch(e => { status.innerText = "שגיאה בחיבור"; });
+        function requestCode() {
+            alert("מבקש קוד מהשרת... המתיני רגע");
+            fetch('/request_code').then(r => alert("הקוד נשלח למייל שלך!"));
+        }
+        function login() {
+            let code = document.getElementById('authCode').value;
+            fetch('/login/' + code).then(r => r.json()).then(data => {
+                if(data.status === "success") alert("התחברת בהצלחה לרובוט!");
+                else alert("ההתחברות נכשלה, בדקי את הקוד.");
+            });
+        }
+        function run(cmd) {
+            fetch('/action/' + cmd).then(r => alert("הפקודה נשלחה!"));
         }
     </script>
 </body>
