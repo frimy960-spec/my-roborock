@@ -2,7 +2,7 @@ import os
 import asyncio
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
-from roborock.api import RoborockApiClient
+from roborock.api_client import RoborockApiClient
 
 app = Flask(__name__)
 CORS(app)
@@ -20,6 +20,7 @@ def home():
 def request_code():
     async def _req():
         global client
+        # בגרסה החדשה זה המבנה המדויק
         client = RoborockApiClient(EMAIL)
         await client.request_code()
         return True
@@ -50,14 +51,12 @@ def run_command(cmd):
         if not client or not user_data:
             return False
         
-        # קבלת רשימת המכשירים
         home_data = await client.get_home_data(user_data)
         if not home_data.devices:
             return False
         
         device_id = home_data.devices[0].duid
         
-        # שליחת פקודה לפי הסוג
         if cmd == "start": await client.send_command(device_id, "app_start", [])
         elif cmd == "stop": await client.send_command(device_id, "app_stop", [])
         elif cmd == "home": await client.send_command(device_id, "app_charge", [])
