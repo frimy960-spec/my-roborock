@@ -39,7 +39,9 @@ def login(code):
 
 @app.route('/action/<cmd>')
 def run_command(cmd):
-    return jsonify({"status": "logged_in", "command_received": cmd})
+    # הפקודה כרגע רק מחזירה אישור, בהמשך נחבר אותה לרובוט הספציפי
+    return jsonify({"status": f"Command {cmd} received by robot"})
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
