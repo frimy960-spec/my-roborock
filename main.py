@@ -2,7 +2,8 @@ import os
 import asyncio
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
-from roborock.api_client import RoborockApiClient
+# זו הדרך הנכונה בגרסה 5.0.0
+from roborock import RoborockApiClient
 
 app = Flask(__name__)
 CORS(app)
@@ -20,7 +21,6 @@ def home():
 def request_code():
     async def _req():
         global client
-        # בגרסה החדשה זה המבנה המדויק
         client = RoborockApiClient(EMAIL)
         await client.request_code()
         return True
