@@ -2,7 +2,7 @@ import os
 import asyncio
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
-from roborock import RoborockClient
+from roborock import RoborockApiClient
 
 app = Flask(__name__)
 CORS(app)
@@ -18,7 +18,7 @@ def home():
 def request_code():
     async def _req():
         global client
-        client = RoborockClient(EMAIL)
+        client = RoborockApiClient(EMAIL)
         await client.request_code()
         return True
     
@@ -31,7 +31,8 @@ def request_code():
 def login(code):
     async def _login():
         global client
-        if not client: client = RoborockClient(EMAIL)
+        if not client:
+            client = RoborockApiClient(EMAIL)
         await client.code_login(code)
         return True
 
@@ -45,13 +46,15 @@ def run_command(cmd):
     async def _do():
         global client
         if not client: return False
-        devices = await client.get_devices()
-        if not devices: return False
-        device = devices[0]
         
-        if cmd == "start": await client.start_clean(device)
-        elif cmd == "stop": await client.stop_clean(device)
-        elif cmd == "home": await client.return_to_dock(device)
+        home_data = await client.get_home_data()
+        if not home_data or not home_data.devices: return False
+        
+        device_id = home_data.devices[0].duid
+        
+        if cmd == "start": await client.send_command(device_id, "app_start", [])
+        elif cmd == "stop": await client.send_command(device_id, "app_stop", [])
+        elif cmd == "home": await client.send_command(device_id, "app_charge", [])
         return True
 
     loop = asyncio.new_event_loop()
