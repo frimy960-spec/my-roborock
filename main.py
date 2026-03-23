@@ -6,8 +6,6 @@ app = Flask(__name__)
 CORS(app)
 
 EMAIL = "gs6817771@gmail.com"
-# שימוש בכתובת ה-API היציבה יותר של אירופה/גלובל
-BASE_URL = "https://api.roborock.com/api/v1"
 HEADERS = {
     "User-Agent": "roborock/4.3.18 (iPhone; iOS 15.1; Scale/3.00)",
     "Content-Type": "application/json"
@@ -20,25 +18,32 @@ def home():
 @app.route('/request_code')
 def request_code():
     try:
-        # שימוש בכתובת הספציפית לשליחת קוד
+        # ניסיון שליחה לשרת ה-API הראשי
         url = "https://api-global.roborock.com/api/v1/sendEmailCode"
-        with httpx.Client(headers=HEADERS, timeout=10.0) as client:
+        print(f"--- שולח בקשה למייל: {EMAIL} ---")
+        
+        with httpx.Client(headers=HEADERS, timeout=15.0) as client:
             resp = client.post(url, json={
                 "email": EMAIL, 
                 "type": "login", 
                 "rr_region": "global"
             })
-            print(f"Status: {resp.status_code}, Body: {resp.text}")
+            
+            # זה הלוג הקריטי שיעזור לנו להבין מה רובורוק אומרים
+            print(f"תשובת רובורוק: סטטוס {resp.status_code}, תוכן: {resp.text}")
+            
             if resp.status_code == 200:
                 return jsonify({"status": "code_sent"})
-            return jsonify({"status": "error", "message": resp.text})
-    except Exception as e: 
+            else:
+                return jsonify({"status": "error", "message": resp.text})
+                
+    except Exception as e:
+        print(f"שגיאת תקשורת: {str(e)}")
         return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/login/<code>')
 def login(code):
-    # כאן נשמור את הלוגיקה להתחברות בהמשך
     return jsonify({"status": "success"})
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
