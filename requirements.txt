@@ -1,3 +1,3 @@
 flask
 flask-cors
-python-roborock
+python-roborock==2.1.0
