@@ -10,62 +10,42 @@
         button { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .btn-blue { background: #007bff; color: white; }
         .btn-green { background: #28a745; color: white; }
-        .btn-red { background: #dc3545; color: white; }
-        .btn-orange { background: #fd7e14; color: white; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        #status { margin-top: 20px; color: #555; font-weight: bold; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align: center; }
+        #status { margin-top: 15px; color: #d9534f; font-weight: bold; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2>שליטה ברובוט 🧹</h2>
-        
-        <div id="login-section">
-            <button class="btn-blue" onclick="requestCode()">שלח קוד אימות למייל</button>
-            <input type="text" id="verification-code" placeholder="הכנס את הקוד מהמייל">
-            <button class="btn-green" onclick="login()">התחבר</button>
+        <div id="auth-section">
+            <p>שלב 1: שליחת קוד למייל</p>
+            <input type="email" id="email" value="gs6817771@gmail.com" readonly>
+            <button class="btn-blue" onclick="requestCode()">שלח קוד אימות</button>
+            <hr>
+            <p>שלב 2: הזנת הקוד שהתקבל</p>
+            <input type="text" id="code" placeholder="הקלידו כאן את הקוד">
+            <button class="btn-green" onclick="login()">התחברות לרובוט</button>
         </div>
-
-        <div id="controls-section" class="hidden">
-            <button class="btn-green" onclick="runAction('start')">הפעל ניקוי ▶️</button>
-            <button class="btn-red" onclick="runAction('stop')">עצור ⏸️</button>
-            <button class="btn-orange" onclick="runAction('home')">חזור לעמדת טעינה 🏠</button>
-        </div>
-
-        <div id="status">ממתין לפעולה...</div>
+        <div id="status"></div>
     </div>
 
     <script>
-        const log = (msg) => document.getElementById('status').innerText = msg;
-
+        const statusDiv = document.getElementById('status');
         async function requestCode() {
-            log("שולח בקשה לקוד...");
-            const res = await fetch('/request_code');
-            const data = await res.json();
-            log(data.status === "code_sent" ? "הקוד נשלח! בדקי את המייל" : "שגיאה בשליחת הקוד");
+            statusDiv.innerText = "שולח בקשה...";
+            try {
+                const res = await fetch('/request_code');
+                const data = await res.json();
+                statusDiv.innerText = data.status === "code_sent" ? "✅ הקוד נשלח למייל!" : "❌ שגיאה: " + (data.message || "נסו שוב");
+            } catch (e) { statusDiv.innerText = "❌ תקלה בתקשורת"; }
         }
-
         async function login() {
-            const code = document.getElementById('verification-code').value;
-            if(!code) return alert("נא להזין קוד");
-            log("מתחבר...");
+            const code = document.getElementById('code').value;
+            statusDiv.innerText = "מתחבר...";
             const res = await fetch(`/login/${code}`);
             const data = await res.json();
-            if(data.status === "success") {
-                log("מחובר בהצלחה!");
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('controls-section').classList.remove('hidden');
-            } else {
-                log("התחברות נכשלה. וודאי שהקוד נכון");
-            }
-        }
-
-        async function runAction(cmd) {
-            log(`שולח פקודה: ${cmd}...`);
-            const res = await fetch(`/action/${cmd}`);
-            const data = await res.json();
-            log(`סטטוס: ${data.status}`);
+            statusDiv.innerText = data.status === "success" ? "🎊 מחובר! הרובוט מוכן" : "❌ קוד לא תקין";
         }
     </script>
 </body>
