@@ -2,7 +2,8 @@ import os
 import asyncio
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
-from roborock import RoborockApiClient
+# זה הנתיב המדויק לגרסה 2.1.0 שמותקנת אצלך
+from roborock.client import RoborockClient
 
 app = Flask(__name__)
 CORS(app)
@@ -18,7 +19,7 @@ def home():
 def request_code():
     async def _req():
         global client
-        client = RoborockApiClient(EMAIL)
+        client = RoborockClient(EMAIL)
         await client.request_code()
         return True
     
@@ -32,7 +33,7 @@ def login(code):
     async def _login():
         global client
         if not client:
-            client = RoborockApiClient(EMAIL)
+            client = RoborockClient(EMAIL)
         await client.code_login(code)
         return True
 
