@@ -5,15 +5,16 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# גרסה 2.0 - בדיקה
 @app.route('/')
 def home(): 
     return render_template('index.html')
 
-@app.route('/request_code')
-def request_code():
-    print("!!! הגרסה החדשה רצה - מנסה לשלוח קוד !!!")
+# שינינו את השם מ-request_code ל-send_auth
+@app.route('/send_auth')
+def send_auth():
+    print("!!! NEW VERSION EXECUTING !!!")
     email = "gs6817771@gmail.com"
+    # כתובת API חלופית של רובורוק
     url = "https://api-global.roborock.com/api/v1/sendEmailCode"
     
     headers = {
@@ -28,10 +29,9 @@ def request_code():
                 "type": "login", 
                 "rr_region": "global"
             })
-            print(f"תשובה מרובורוק: {resp.status_code} | {resp.text}")
-            return jsonify({"status": "code_sent" if resp.status_code == 200 else "error", "details": resp.text})
+            print(f"ROBOROCK ANSWER: {resp.status_code} | {resp.text}")
+            return jsonify({"status": "ok", "server_msg": resp.text})
     except Exception as e:
-        print(f"שגיאה קריטית: {str(e)}")
         return jsonify({"status": "error", "message": str(e)})
 
 if __name__ == "__main__":
