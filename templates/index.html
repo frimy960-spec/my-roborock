@@ -12,7 +12,6 @@
         .btn-green { background: #28a745; color: white; }
         input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align: center; }
         #status { margin-top: 15px; color: #d9534f; font-weight: bold; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -32,20 +31,24 @@
 
     <script>
         const statusDiv = document.getElementById('status');
+        
         async function requestCode() {
             statusDiv.innerText = "שולח בקשה...";
             try {
-                const res = await fetch('/request_code');
+                // זה השינוי הקריטי - פנייה לכתובת החדשה send_auth
+                const res = await fetch('/send_auth'); 
                 const data = await res.json();
-                statusDiv.innerText = data.status === "code_sent" ? "✅ הקוד נשלח למייל!" : "❌ שגיאה: " + (data.message || "נסו שוב");
-            } catch (e) { statusDiv.innerText = "❌ תקלה בתקשורת"; }
+                statusDiv.innerText = data.status === "ok" ? "✅ הקוד נשלח למייל!" : "❌ שגיאה: " + (data.server_msg || "נסו שוב");
+            } catch (e) { 
+                statusDiv.innerText = "❌ תקלה בתקשורת: " + e; 
+            }
         }
+
         async function login() {
             const code = document.getElementById('code').value;
             statusDiv.innerText = "מתחבר...";
-            const res = await fetch(`/login/${code}`);
-            const data = await res.json();
-            statusDiv.innerText = data.status === "success" ? "🎊 מחובר! הרובוט מוכן" : "❌ קוד לא תקין";
+            // כאן בהמשך נוסיף את הלוגיקה המלאה להתחברות
+            statusDiv.innerText = "התחברת! (זמני)";
         }
     </script>
 </body>
