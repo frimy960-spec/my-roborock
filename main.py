@@ -5,45 +5,34 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-EMAIL = "gs6817771@gmail.com"
-HEADERS = {
-    "User-Agent": "roborock/4.3.18 (iPhone; iOS 15.1; Scale/3.00)",
-    "Content-Type": "application/json"
-}
-
+# גרסה 2.0 - בדיקה
 @app.route('/')
 def home(): 
     return render_template('index.html')
 
 @app.route('/request_code')
 def request_code():
+    print("!!! הגרסה החדשה רצה - מנסה לשלוח קוד !!!")
+    email = "gs6817771@gmail.com"
+    url = "https://api-global.roborock.com/api/v1/sendEmailCode"
+    
+    headers = {
+        "User-Agent": "roborock/4.3.18 (iPhone; iOS 15.1; Scale/3.00)",
+        "Content-Type": "application/json"
+    }
+    
     try:
-        # ניסיון שליחה לשרת ה-API הראשי
-        url = "https://api-global.roborock.com/api/v1/sendEmailCode"
-        print(f"--- שולח בקשה למייל: {EMAIL} ---")
-        
-        with httpx.Client(headers=HEADERS, timeout=15.0) as client:
+        with httpx.Client(headers=headers, timeout=20.0) as client:
             resp = client.post(url, json={
-                "email": EMAIL, 
+                "email": email, 
                 "type": "login", 
                 "rr_region": "global"
             })
-            
-            # זה הלוג הקריטי שיעזור לנו להבין מה רובורוק אומרים
-            print(f"תשובת רובורוק: סטטוס {resp.status_code}, תוכן: {resp.text}")
-            
-            if resp.status_code == 200:
-                return jsonify({"status": "code_sent"})
-            else:
-                return jsonify({"status": "error", "message": resp.text})
-                
+            print(f"תשובה מרובורוק: {resp.status_code} | {resp.text}")
+            return jsonify({"status": "code_sent" if resp.status_code == 200 else "error", "details": resp.text})
     except Exception as e:
-        print(f"שגיאת תקשורת: {str(e)}")
+        print(f"שגיאה קריטית: {str(e)}")
         return jsonify({"status": "error", "message": str(e)})
 
-@app.route('/login/<code>')
-def login(code):
-    return jsonify({"status": "success"})
-
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+    app.run(host='0.0.0.0', port=10000)
